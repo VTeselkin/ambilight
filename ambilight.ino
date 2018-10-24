@@ -202,6 +202,7 @@ void check_button(void)                                  // ON/OFF button routin
 	}
 }
 
+
 // Sets the color of all LEDs in the strip
 // If 'wait'>0 then it will show a swipe from start to end
 void setAllLEDs(uint32_t color, int wait) {
