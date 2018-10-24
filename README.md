@@ -37,3 +37,39 @@ Detailed installation guide available here: https://github.com/hyperion-project/
 ### Hyperion JSON configuration
 You can be guru and write your own config file, or just get and use latest Hyperion JSON configurator:
 https://sourceforge.net/projects/hyperion-project/files/latest/download?source=files
+# How to change  Hyperion configuration or troubleshoot?
+If setup is not working, first check if the hyperion is running by typing:
+```sh
+ps -a | grep hyper
+```
+If you want to see and debug hyperion messages run it instead with:
+```sh
+/storage/hyperion/bin/hyperiond.sh /storage/.config/hyperion.config.json
+```
+There is an easy way to test it using one of shell commands below (for solid colour or Rainbow effect):
+```sh
+/storage/hyperion/bin/hyperion-remote.sh --priority 50 --color red --duration 5000 
+
+/storage/hyperion/bin/hyperion-remote.sh --effect "Rainbow swirl fast" --duration 3000
+```
+If it still does not work you can always edit configuration, adjust it
+
+```sh
+nano /storage/.config/hyperion.config.json
+```
+# Hardware for "RGB delight"
+#### What RGB diodes to choose?
+There are many options for RGB LED strip. Idea is to have controlable one – to be more specific RGB diodes that you can individually control. So be careful while you are ordering your 5m pack. What model should you choose? I was thinking about WS2801, WS 2811, WS2812, WS2812b. `Keeping it short, you should go for WS2812b IP65.`
+
+## Why choose WS2812b with IP65 and 3M stick tape
+#### Advantages:
+
+- They use just 3 wires! +5v, GND and DATA line.
+- WS2812 have chip integrated in 5050 RGB diode!
+- WS2812b have reverse voltage protection (it is easy to mix two wires and kill LED strip if you do not have b version)
+- IP65 gives you silicone over diodes, I like that more than IP67 (plastic tube). It is good that your LED strip is protected from dust etc.
+- 3M stick tape helps you to stick the diodes direct to TV (if you are less brave and would like to make frame, check some websites)
+they come in 3 variants 30LED, 60LED or 144LED / m. I think that 60LED/m provide optimal brightness.
+#### WS2812 main drawbacks:
+ - Hard to controll It can not (or can but it is not easy to do) be controlled directly from Raspberry Pi2! You must use Arduino. Why? Because it needs 800kHz signal and your Raspberry Pi is not running realtime OS, so any interrupt will brake the timing and cause problems and unreliable behaviour.
+ - They need lots of power at 5V DC supply on packaging bag they are stated at 90W. But for 5 meters 10A 5V will be enough. I have measured 3A to 5A while all 5m were on. If you have shorter length maybe 5A supply will be enough. Max power calculation is 5m x 60 LED = 300 LED. each LED is 3 separate colors (Red Green Blue = RGB) so 3x 20mA. Total 300x60mA=18A current. Voltage 5V (beware not to use 12V!!) Giving total power 18A * 5V = 90W ! Have in mind that equivalent of regular bulb wuould be multiplied by e.g. 7, so max brightness would give you 90W * 7 = 630W (advice: do not stare directly at your LEDs!)
