@@ -73,3 +73,83 @@ they come in 3 variants 30LED, 60LED or 144LED / m. I think that 60LED/m provide
 #### WS2812 main drawbacks:
  - Hard to controll It can not (or can but it is not easy to do) be controlled directly from Raspberry Pi2! You must use Arduino. Why? Because it needs 800kHz signal and your Raspberry Pi is not running realtime OS, so any interrupt will brake the timing and cause problems and unreliable behaviour.
  - They need lots of power at 5V DC supply on packaging bag they are stated at 90W. But for 5 meters 10A 5V will be enough. I have measured 3A to 5A while all 5m were on. If you have shorter length maybe 5A supply will be enough. Max power calculation is 5m x 60 LED = 300 LED. each LED is 3 separate colors (Red Green Blue = RGB) so 3x 20mA. Total 300x60mA=18A current. Voltage 5V (beware not to use 12V!!) Giving total power 18A * 5V = 90W ! Have in mind that equivalent of regular bulb wuould be multiplied by e.g. 7, so max brightness would give you 90W * 7 = 630W (advice: do not stare directly at your LEDs!)
+ 
+ ## What Arduino to choose for Ambilight
+
+Beware! There are some project that suggest direct connection of Raspberry Pi to Arduino via serial pin (RX TX) or SPI. Some arduinos are working with 5V logic level and Raspberry is using 3.3V and you will probably require TTL logic level shifters.The safe way is to connect them with USB cable (micro for Arduino Leonardo, mini for Arduino Nano or stanrad USB for Arduino Mega)
+When you connect Arduino Nano to Raspberry it will be detected as /dev/ttyUSB0. If you use Arduino Mega it will be /dev/ttyACM0. How to check that? Just login via SSH to your Raspberry and type: 
+```sh
+ls -al /dev/tty*
+```
+Which will give you something like:
+ ```sh
+ crw--w----    1 root     tty         4,   8 Jan  1  1970 /dev/tty8 
+ crw--w----    1 root     tty         4,   9 Jan  1  1970 /dev/tty9 
+ crw-rw----    1 root     dialout   204,  64 Jan  1  1970 /dev/ttyAMA0 
+ crw-rw----    1 root     dialout   188,   0 Mar 28 18:52 /dev/ttyUSB0 
+ ```
+ You will see ttyUSB0 or ttyACM0 and then you will know what to enter in config files. If your USB serial is missing you can re-plug Arduino. You can always check with command: 
+ ```sh 
+ dmesg
+ ```
+ Which will give you result like:
+  ```sh 
+ [   70.912700] usb 1-1.3: new full-speed USB device number 9 using dwc_otg 
+ [   71.032687] usb 1-1.3: New USB device found, idVendor=0403, idProduct=6001 
+ [   71.032724] usb 1-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3 
+ [   71.032741] usb 1-1.3: Product: FT232R USB UART 
+ [   71.032756] usb 1-1.3: Manufacturer: FTDI 
+ [   71.032771] usb 1-1.3: SerialNumber: AH01KPB9 
+ [   71.072351] usbcore: registered new interface driver usbserial 
+ [   71.072562] usbcore: registered new interface driver usbserial_generic 
+ [   71.072696] usbserial: USB Serial support registered for generic 
+ [   71.092861] usbcore: registered new interface driver ftdi_sio 
+ [   71.092992] usbserial: USB Serial support registered for FTDI USB Serial Device 
+ [   71.093405] ftdi_sio 1-1.3:1.0: FTDI USB Serial Device converter detected 
+ [   71.093584] usb 1-1.3: Detected FT232RL 
+ [   71.094575] usb 1-1.3: FTDI USB Serial Device converter now attached to ttyUSB0
+ ```
+ # What about Raspberry Pi Arduino USB serial port speed? 
+ ## `Use 500.000 !`
+ # What about Arduino sketch?
+ To work correctly in the sketch you need to make several important changes.
+ **Firstly**, override several parameters:
+```sh
+#define STARTCOLOR 0xff8000  // LED color at startup 0xff8000 is orange in hex code. 
+#define BLACK      0x000000  // LED color BLACK
+#define DATAPIN    6         // Datapin
+#define LEDCOUNT   108       //  Number of LEDs used in your system
+#define SHOWDELAY  20        // Delay in micro seconds before showing
+#define BAUDRATE   500000    // Serial port speed
+#define BRIGHTNESS 100        // Max. brightness in %
+```
+**Must change DATAPIN and LEDCOUNT if needed!**
+DATAPIN - Port number to which the data channel is connected to the LED strip
+LEDCOUNT - The number of used LEDs in the tape
+STARTCOLOR - LED color at startup 0xff8000 is orange in hex code. Pick your own here:
+http://www.w3schools.com/colors/colors_picker.asp
+BAUDRATE - **`Put same value in Hyperion`**
+
+**Secondly**, change prefix at the start of the transmission:
+```sh
+const char prefix[] = { 0x41, 0x64, 0x61, 0x00, 0x6B, 0x3E }; 
+```
+##### `The first 4 bytes will never change: 0x41, 0x64, 0x61, 0x00`
+**The next byte is equal to the number of LED - 1 --> (108-1)=107. 107 transformed in HEX. 107 in hex is 6B (use google).
+The last byte is equal to the XOR value of the calculated value just above and 0x55 (byte just calculated (6B) XORED with 0x55) = 3E     
+Use this link http://xor.pw/ and in input 1 put 55 and in input 2 put your HEX value.**
+
+
+
+
+
+
+License
+----
+
+MIT
+
+
+**Free Software, Hell Yeah!**
+
+
